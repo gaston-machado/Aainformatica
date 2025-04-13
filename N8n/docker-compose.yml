@@ -1,0 +1,56 @@
+version: '3'
+
+services:
+  n8n:
+    image: n8nio/n8n
+    restart: always
+    networks:
+      - traefik-network
+    environment:
+      - N8N_PROTOCOL=http
+      - N8N_HOST=n8n.aainformatica
+      - N8N_PORT=80
+      - N8N_ENCRYPTION_KEY=********** #agregar clave la que querais
+      - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=false
+      - N8N_DIAGNOSTICS_ENABLED=false
+      - N8N_TELEMETRY_ENABLED=false
+      - N8N_SECURE_COOKIE=false
+      # Configuración de task runners
+      - N8N_RUNNERS_ENABLED=true
+      # Configuración para PostgreSQL
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=postgres
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=n8n
+      - DB_POSTGRESDB_USER=n8n
+      - DB_POSTGRESDB_PASSWORD=n8n_password_secure #contraseña que va en pel posgres
+    volumes:
+      - ./n8n-data:/home/node/.n8n
+      - /work/base_doc:/work/base_doc
+    user: "1000:1000"  # Ajusta este valor a tu UID:GID del host
+    depends_on:
+      - postgres
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.n8n.rule=Host(`n8n.aainformatica`)"
+      - "traefik.http.routers.n8n.entrypoints=web"  
+      - "traefik.http.services.n8n.loadbalancer.server.port=80"
+
+  postgres:
+    image: postgres:14
+    restart: always
+    networks:
+      - traefik-network
+    environment:
+      - POSTGRES_USER=n8n
+      - POSTGRES_PASSWORD=n8n_password_secure
+      - POSTGRES_DB=n8n
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
+
+networks:
+  traefik-network:
+    external: true

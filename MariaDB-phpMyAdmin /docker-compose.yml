@@ -1,0 +1,47 @@
+version: '3'
+
+services:
+  # Servicio de MariaDB
+  mariadb:
+    image: mariadb:latest
+    container_name: mariadb_container
+    environment:
+      MYSQL_ROOT_PASSWORD: rHrHTfQOYkudcDTdm1tI3oX0  # Cambia esto en producción
+      MYSQL_DATABASE: mi_base_de_datos    # Nombre de la base de datos inicial
+      MYSQL_USER: usuario                 # Usuario para la base de datos
+      MYSQL_PASSWORD: 7Hw2ETmBZbTL577rnDhXKOw3            # Contraseña para el usuario
+    volumes:
+      - mariadb_data:/var/lib/mysql       # Volumen para persistir los datos
+    restart: unless-stopped
+    networks:
+      - traefik-network
+
+  # Servicio de phpMyAdmin
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: phpmyadmin_container
+    environment:
+      PMA_HOST: mariadb                   # Nombre del servicio de MariaDB
+      PMA_PORT: 3306                      # Puerto de MariaDB
+      MYSQL_ROOT_PASSWORD: rHrHTfQOYkudcDTdm1tI3oX0  # Debe coincidir con el de MariaDB
+    depends_on:
+      - mariadb                           # Asegura que MariaDB inicie primero
+    restart: unless-stopped
+    networks:
+      - traefik-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.phpmyadmin.rule=Host(`phpmyadmin.aainformatica`)"
+      - "traefik.http.routers.phpmyadmin.entrypoints=web"
+      - "traefik.http.services.phpmyadmin.loadbalancer.server.port=80"
+
+
+# Volúmenes para persistencia de datos
+volumes:
+  mariadb_data:
+    driver: local
+
+# Red para comunicación entre contenedores
+networks:
+  traefik-network:
+    external: true

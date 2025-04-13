@@ -1,0 +1,30 @@
+api:
+  dashboard: true
+  insecure: true
+
+entryPoints:
+  web:
+    address: ":80"
+  websecure:
+    address: ":443"
+
+providers:
+  docker:
+    endpoint: "unix:///var/run/docker.sock"
+    exposedByDefault: false
+    network: traefik-network
+    #defaultRule: "Host(`{{ normalize .Name }}.aainformatica`)" RECORDAR DESCOMENTAR ESTO Y CAMBIAR LODE AAINFORMATICA si quieres cambiar el final de la resolucion de url. Esto tambien tendras que cambiar en las etiquetas de los contenedores.
+    watch: true
+  file:
+    directory: /etc/traefik/config
+    watch: true
+
+# Log level: DEBUG, INFO, WARN, ERROR, FATAL
+log:
+  level: INFO
+
+# Configuración opcional para TLS local
+# tls:
+#   certificates:
+#     - certFile: /etc/traefik/certificates/cert.pem
+#       keyFile: /etc/traefik/certificates/key.pem
