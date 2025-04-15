@@ -1,0 +1,45 @@
+version: '3'
+
+services:
+  # Servicio de PostgreSQL con pgvector
+  postgres:
+    image: ankane/pgvector:latest
+    container_name: postgres_vector_container
+    environment:
+      POSTGRES_PASSWORD: rHrHTfQOYkudcDTdm1tI3oX0  # Cambia esto en producción
+      POSTGRES_USER: usuario
+      POSTGRES_DB: vector_db
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data  # Volumen para persistir los datos
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql  # Script de inicialización
+    restart: unless-stopped
+    networks:
+      - traefik-network
+
+  # Servicio de pgAdmin para administrar PostgreSQL
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin_container
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@aainformatica.com
+      PGADMIN_DEFAULT_PASSWORD: 7Hw2ETmBZbTL577rnDhXKOw3
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    networks:
+      - traefik-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.pgadmin.rule=Host(`pgadmin.aainformatica`)"
+      - "traefik.http.routers.pgadmin.entrypoints=web"
+      - "traefik.http.services.pgadmin.loadbalancer.server.port=80"
+
+# Volúmenes para persistencia de datos
+volumes:
+  postgres_data:
+    driver: local
+
+# Red para comunicación entre contenedores
+networks:
+  traefik-network:
+    external: true

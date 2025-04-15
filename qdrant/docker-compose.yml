@@ -1,0 +1,29 @@
+version: '3'
+
+services:
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: qdrant
+    restart: always
+    volumes:
+      - ./qdrant_data:/qdrant/storage
+    environment:
+      - QDRANT_ALLOW_RECOVERY_MODE=true
+      - QDRANT_SERVICE__HTTP__CORS__ALLOWED_ORIGINS=http://n8n.aainformatica
+      - QDRANT_SERVICE__HTTP__CORS__ALLOW_CREDENTIALS=true
+    networks:
+      - traefik-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.qdrant.rule=Host(`qdrant.aainformatica`)"
+      - "traefik.http.routers.qdrant.entrypoints=web"
+      - "traefik.http.services.qdrant-service.loadbalancer.server.port=6333"
+      - "traefik.http.routers.qdrant.service=qdrant-service"
+
+volumes:
+  qdrant_data:
+    driver: local
+
+networks:
+  traefik-network:
+    external: true
